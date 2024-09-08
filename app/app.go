@@ -109,6 +109,10 @@ func (a *fyneApp) newDefaultPreferences() *preferences {
 	return p
 }
 
+func (a *fyneApp) Clipboard() fyne.Clipboard {
+	return a.Driver().Clipboard()
+}
+
 // New returns a new application instance with the default driver and no unique ID (unless specified in FyneApp.toml)
 func New() fyne.App {
 	if meta.ID == "" {

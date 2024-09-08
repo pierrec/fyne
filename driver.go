@@ -43,4 +43,9 @@ type Driver interface {
 	//
 	// Since: 2.5
 	SetDisableScreenBlanking(bool)
+
+	// Clipboard returns the system clipboard.
+	//
+	// Since: 2.6
+	Clipboard() Clipboard
 }
