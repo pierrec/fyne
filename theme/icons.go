@@ -56,6 +56,11 @@ const (
 	// Since: 2.5
 	IconNameCheckButtonFill fyne.ThemeIconName = "iconNameCheckButtonFill"
 
+	// IconNameCheckButtonPartial is the name of theme lookup for "partially" checked check button icon.
+	//
+	// Since: 2.6
+	IconNameCheckButtonPartial fyne.ThemeIconName = "partial"
+
 	// IconNameRadioButton is the name of theme lookup for radio button unchecked icon.
 	//
 	// Since: 2.0
@@ -456,6 +461,11 @@ const (
 	// Since: 2.1
 	IconNameAccount fyne.ThemeIconName = "account"
 
+	// IconNameCalendar is the name of theme lookup for calendar icon.
+	//
+	// Since: 2.6
+	IconNameCalendar fyne.ThemeIconName = "calendar"
+
 	// IconNameLogin is the name of theme lookup for login icon.
 	//
 	// Since: 2.1
@@ -505,6 +515,7 @@ var (
 		IconNameCheckButton:        NewThemedResource(checkboxIconRes),
 		IconNameCheckButtonChecked: NewThemedResource(checkboxcheckedIconRes),
 		IconNameCheckButtonFill:    NewThemedResource(checkboxfillIconRes),
+		IconNameCheckButtonPartial: NewThemedResource(checkboxpartialIconRes),
 		IconNameRadioButton:        NewThemedResource(radiobuttonIconRes),
 		IconNameRadioButtonChecked: NewThemedResource(radiobuttoncheckedIconRes),
 		IconNameRadioButtonFill:    NewThemedResource(radiobuttonfillIconRes),
@@ -599,9 +610,10 @@ var (
 		IconNameStorage:  NewThemedResource(storageIconRes),
 		IconNameUpload:   NewThemedResource(uploadIconRes),
 
-		IconNameAccount: NewThemedResource(accountIconRes),
-		IconNameLogin:   NewThemedResource(loginIconRes),
-		IconNameLogout:  NewThemedResource(logoutIconRes),
+		IconNameAccount:  NewThemedResource(accountIconRes),
+		IconNameCalendar: NewThemedResource(calendarIconRes),
+		IconNameLogin:    NewThemedResource(loginIconRes),
+		IconNameLogout:   NewThemedResource(logoutIconRes),
 
 		IconNameList: NewThemedResource(listIconRes),
 		IconNameGrid: NewThemedResource(gridIconRes),
@@ -771,6 +783,14 @@ func (res *ErrorThemedResource) Original() fyne.Resource {
 	return res.source
 }
 
+// ThemeColorName returns the fyne.ThemeColorName that is used as foreground color.
+// @implements fyne.ThemedResource
+//
+// Since: 2.6
+func (res *ErrorThemedResource) ThemeColorName() fyne.ThemeColorName {
+	return ColorNameError
+}
+
 // PrimaryThemedResource is a resource wrapper that will return a version of the resource with the main color changed
 // to the theme primary color.
 type PrimaryThemedResource struct {
@@ -798,6 +818,14 @@ func (res *PrimaryThemedResource) Original() fyne.Resource {
 	return res.source
 }
 
+// ThemeColorName returns the fyne.ThemeColorName that is used as foreground color.
+// @implements fyne.ThemedResource
+//
+// Since: 2.6
+func (res *PrimaryThemedResource) ThemeColorName() fyne.ThemeColorName {
+	return ColorNamePrimary
+}
+
 // DisabledResource is a resource wrapper that will return an appropriate resource colorized by
 // the current theme's `DisabledColor` color.
 type DisabledResource struct {
@@ -812,6 +840,14 @@ func (res *DisabledResource) Name() string {
 // Content returns the disabled style content of the correct resource for the current theme
 func (res *DisabledResource) Content() []byte {
 	return svg.Colorize(unwrapResource(res.source).Content(), Color(ColorNameDisabled))
+}
+
+// ThemeColorName returns the fyne.ThemeColorName that is used as foreground color.
+// @implements fyne.ThemedResource
+//
+// Since: 2.6
+func (res *DisabledResource) ThemeColorName() fyne.ThemeColorName {
+	return ColorNameDisabled
 }
 
 // NewDisabledResource creates a resource that adapts to the current theme's DisabledColor setting.
@@ -1283,6 +1319,13 @@ func UploadIcon() fyne.Resource {
 // AccountIcon returns a resource containing the standard account icon for the current theme
 func AccountIcon() fyne.Resource {
 	return safeIconLookup(IconNameAccount)
+}
+
+// CalendarIcon returns a resource containing the standard account icon for the current theme
+//
+// Since: 2.6
+func CalendarIcon() fyne.Resource {
+	return safeIconLookup(IconNameCalendar)
 }
 
 // LoginIcon returns a resource containing the standard login icon for the current theme

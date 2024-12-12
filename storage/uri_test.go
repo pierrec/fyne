@@ -2,6 +2,7 @@ package storage_test
 
 import (
 	"io"
+	"os"
 	"runtime"
 	"testing"
 
@@ -15,7 +16,6 @@ import (
 )
 
 func TestURIAuthority(t *testing.T) {
-
 	// from IETF RFC 3986
 	s := "foo://example.com:8042/over/there?name=ferret#nose"
 	u, err := storage.ParseURI(s)
@@ -226,7 +226,29 @@ func TestExists(t *testing.T) {
 	fooParent, err := storage.Parent(foo)
 	assert.Nil(t, err)
 	assert.Equal(t, fooExpectedParent.String(), fooParent.String())
+}
 
+func TestFileAbs(t *testing.T) {
+	pwd, err := os.Getwd()
+	if err != nil {
+		t.Error("Could not get working directory")
+		defer os.Chdir(pwd)
+	}
+
+	home, err := os.UserHomeDir()
+	if err != nil {
+		t.Error("Could not get user home directory")
+	}
+
+	os.Chdir(home)
+
+	abs := storage.NewFileURI(home)
+	rel := storage.NewFileURI(".")
+
+	assert.Equal(t, abs.Path(), rel.Path())
+	assert.Equal(t, abs.String(), rel.String())
+
+	assert.Equal(t, "file:///", storage.NewFileURI("/").String())
 }
 
 func TestWriteAndDelete(t *testing.T) {
@@ -270,6 +292,14 @@ func TestWriteAndDelete(t *testing.T) {
 	barWriter.Close()
 	bazWriter.Close()
 
+	bazAppender, err := storage.Appender(baz)
+	assert.Nil(t, err)
+	n, err = bazAppender.Write([]byte{1, 2, 3, 4, 5})
+	assert.Nil(t, err)
+	assert.Equal(t, 5, n)
+
+	bazAppender.Close()
+
 	// now make sure we can read the data back correctly
 	fooReader, err := storage.Reader(foo)
 	assert.Nil(t, err)
@@ -286,7 +316,7 @@ func TestWriteAndDelete(t *testing.T) {
 	bazReader, err := storage.Reader(baz)
 	assert.Nil(t, err)
 	bazData, err := io.ReadAll(bazReader)
-	assert.Equal(t, []byte{5, 4, 3, 2, 1, 0}, bazData)
+	assert.Equal(t, []byte{5, 4, 3, 2, 1, 0, 1, 2, 3, 4, 5}, bazData)
 	assert.Nil(t, err)
 
 	// now let's test deletion
@@ -310,7 +340,6 @@ func TestWriteAndDelete(t *testing.T) {
 	bazExists, err := storage.Exists(baz)
 	assert.False(t, bazExists)
 	assert.Nil(t, err)
-
 }
 
 func TestCanWrite(t *testing.T) {

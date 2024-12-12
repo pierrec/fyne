@@ -374,8 +374,12 @@ func makeInputTab(_ fyne.Window) fyne.CanvasObject {
 		"Option Z",
 	})
 	selectEntry.PlaceHolder = "Type or select"
+	dateEntry := widget.NewDateEntry()
+	dateEntry.PlaceHolder = "Choose a date"
 	disabledCheck := widget.NewCheck("Disabled check", func(bool) {})
 	disabledCheck.Disable()
+	partialCheck := widget.NewCheck("Partial check", func(bool) {})
+	partialCheck.Partial = true
 	checkGroup := widget.NewCheckGroup([]string{"CheckGroup Item 1", "CheckGroup Item 2"}, func(s []string) { fmt.Println("selected", s) })
 	checkGroup.Horizontal = true
 	radio := widget.NewRadioGroup([]string{"Radio Item 1", "Radio Item 2"}, func(s string) { fmt.Println("selected", s) })
@@ -388,11 +392,12 @@ func makeInputTab(_ fyne.Window) fyne.CanvasObject {
 	return container.NewVBox(
 		widget.NewSelect([]string{"Option 1", "Option 2", "Option 3"}, func(s string) { fmt.Println("selected", s) }),
 		selectEntry,
+		dateEntry,
 		widget.NewCheck("Check", func(on bool) { fmt.Println("checked", on) }),
-		disabledCheck,
+		partialCheck,
 		checkGroup,
 		radio,
-		disabledRadio,
+		container.NewGridWithColumns(2, disabledCheck, disabledRadio),
 		container.NewBorder(nil, nil, widget.NewLabel("Slider"), nil, widget.NewSlider(0, 1000)),
 		container.NewBorder(nil, nil, widget.NewLabel("Disabled slider"), nil, disabledSlider),
 	)

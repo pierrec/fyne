@@ -1115,6 +1115,7 @@ func TestWindow_TappedSecondary(t *testing.T) {
 	o := &tappableObject{Rectangle: canvas.NewRectangle(color.White)}
 	o.SetMinSize(fyne.NewSize(100, 100))
 	w.SetContent(o)
+	waitForMain()
 
 	w.mousePos = fyne.NewPos(50, 60)
 	w.mouseClicked(w.viewport, glfw.MouseButton2, glfw.Press, 0)
@@ -1135,6 +1136,7 @@ func TestWindow_TappedSecondary_OnPrimaryOnlyTarget(t *testing.T) {
 		tapped = true
 	})
 	w.SetContent(o)
+	waitForMain()
 	ensureCanvasSize(t, w, fyne.NewSize(53, 44))
 
 	w.mousePos = fyne.NewPos(10, 25)
@@ -1621,28 +1623,6 @@ func TestWindow_ManualFocus(t *testing.T) {
 	assert.Equal(t, 1, content.unfocusedTimes)
 }
 
-func TestWindow_Clipboard(t *testing.T) {
-	w := createWindow("Test")
-
-	text := "My content from test window"
-	cb := w.Clipboard()
-
-	cliboardContent := cb.Content()
-	if cliboardContent != "" {
-		// Current environment has some content stored in clipboard,
-		// set temporary to an empty string to allow test and restore later.
-		cb.SetContent("")
-	}
-
-	assert.Empty(t, cb.Content())
-
-	cb.SetContent(text)
-	assert.Equal(t, text, cb.Content())
-
-	// Restore clipboardContent, if any
-	cb.SetContent(cliboardContent)
-}
-
 func TestWindow_ClipboardCopy_DisabledEntry(t *testing.T) {
 	w := createWindow("Test").(*window)
 	e := widget.NewEntry()
@@ -1662,7 +1642,7 @@ func TestWindow_ClipboardCopy_DisabledEntry(t *testing.T) {
 	w.keyPressed(nil, glfw.KeyC, 0, glfw.Repeat, ctrlMod)
 	w.WaitForEvents()
 
-	assert.Equal(t, "Testing", w.Clipboard().Content())
+	assert.Equal(t, "Testing", NewClipboard().Content())
 
 	e.SetText("Testing2")
 	e.DoubleTapped(nil)
@@ -1673,14 +1653,14 @@ func TestWindow_ClipboardCopy_DisabledEntry(t *testing.T) {
 	w.WaitForEvents()
 
 	assert.Equal(t, "Testing2", e.Text)
-	assert.Equal(t, "Testing", w.Clipboard().Content())
+	assert.Equal(t, "Testing", NewClipboard().Content())
 
 	// any other shortcut should be forbidden (Paste)
 	w.keyPressed(nil, glfw.KeyV, 0, glfw.Repeat, ctrlMod)
 	w.WaitForEvents()
 
 	assert.Equal(t, "Testing2", e.Text)
-	assert.Equal(t, "Testing", w.Clipboard().Content())
+	assert.Equal(t, "Testing", NewClipboard().Content())
 }
 
 func TestWindow_CloseInterception(t *testing.T) {
@@ -1759,17 +1739,15 @@ func TestWindow_SetContent_Twice(t *testing.T) {
 }
 
 func TestWindow_SetFullScreen(t *testing.T) {
-	w := createWindow("Full").(*window)
+	w := d.CreateWindow("Full").(*window)
 	w.SetFullScreen(true)
+	w.create()
+
 	w.create()
 	w.doShow()
 	waitForMain()
-
-	// initial state - no window size set (except darwin?)
-	if runtime.GOOS != "darwin" {
-		assert.Zero(t, w.width)
-		assert.Zero(t, w.height)
-	}
+	assert.Zero(t, w.width)
+	assert.Zero(t, w.height)
 
 	w.SetFullScreen(false)
 	waitForMain()

@@ -30,7 +30,10 @@ const (
 	GridView
 )
 
-const viewLayoutKey = "fyne:fileDialogViewLayout"
+const (
+	viewLayoutKey = "fyne:fileDialogViewLayout"
+	lastFolderKey = "fyne:fileDialogLastFolder"
+)
 
 type textWidget interface {
 	fyne.Widget
@@ -52,6 +55,7 @@ type fileDialogPanel interface {
 type fileDialog struct {
 	file             *FileDialog
 	fileName         textWidget
+	title            *widget.Label
 	dismiss          *widget.Button
 	open             *widget.Button
 	breadcrumb       *fyne.Container
@@ -84,6 +88,7 @@ type FileDialog struct {
 	parent           fyne.Window
 	dialog           *fileDialog
 
+	titleText                string
 	confirmText, dismissText string
 	desiredSize              fyne.Size
 	filter                   storage.FileFilter
@@ -150,6 +155,10 @@ func (f *fileDialog) makeUI() fyne.CanvasObject {
 	if f.file.isDirectory() {
 		title = label + " " + lang.L("Folder")
 	}
+	if f.file.titleText != "" {
+		title = f.file.titleText
+	}
+	f.title = widget.NewLabelWithStyle(title, fyne.TextAlignLeading, fyne.TextStyle{Bold: true})
 
 	view := ViewLayout(fyne.CurrentApp().Preferences().Int(viewLayoutKey))
 
@@ -232,7 +241,7 @@ func (f *fileDialog) makeUI() fyne.CanvasObject {
 	)
 
 	header := container.NewBorder(nil, nil, nil, optionsbuttons,
-		optionsbuttons, widget.NewLabelWithStyle(title, fyne.TextAlignLeading, fyne.TextStyle{Bold: true}),
+		optionsbuttons, f.title,
 	)
 
 	footer := container.NewBorder(nil, nil, nil, buttons,
@@ -245,7 +254,7 @@ func (f *fileDialog) makeUI() fyne.CanvasObject {
 			f.breadcrumbScroll, f.filesScroll,
 		),
 	)
-	body.SetOffset(0) // Set the minimum offset so that the favoritesList takes only it's minimal width
+	body.SetOffset(0) // Set the minimum offset so that the favoritesList takes only its minimal width
 
 	return container.NewBorder(header, footer, nil, nil, body)
 }
@@ -438,6 +447,7 @@ func (f *fileDialog) setLocation(dir fyne.URI) error {
 		return err
 	}
 
+	fyne.CurrentApp().Preferences().SetString(lastFolderKey, dir.String())
 	isFav := false
 	for i, fav := range f.favorites {
 		if fav.loc == nil {
@@ -601,6 +611,8 @@ func (f *fileDialog) getDataItem(id int) (fyne.URI, bool) {
 //
 //   - file.startingDirectory if non-empty, os.Stat()-able, and uses the file://
 //     URI scheme
+//   - previously used file open/close folder within this app
+//   - the current app's document storage, if App.Storage() documents have been saved
 //   - os.UserHomeDir()
 //   - os.Getwd()
 //   - "/" (should be filesystem root on all supported platforms)
@@ -616,7 +628,19 @@ func (f *FileDialog) effectiveStartingDir() fyne.ListableURI {
 				return f.startingLocation
 			}
 		}
+		return f.startingLocation
+	}
 
+	// last used
+	lastPath := fyne.CurrentApp().Preferences().String(lastFolderKey)
+	if lastPath != "" {
+		parsed, err := storage.ParseURI(lastPath)
+		if err == nil {
+			dir, err := storage.ListerForURI(parsed)
+			if err == nil {
+				return dir
+			}
+		}
 	}
 
 	// Try app storage
@@ -747,6 +771,17 @@ func (f *FileDialog) SetDismissText(label string) {
 	}
 	f.dialog.dismiss.SetText(label)
 	f.dialog.win.Refresh()
+}
+
+// SetTitleText allows custom text to be set in the dialog title
+//
+// Since: 2.6
+func (f *FileDialog) SetTitleText(label string) {
+	f.titleText = label
+	if f.dialog == nil {
+		return
+	}
+	f.dialog.title.SetText(label)
 }
 
 // SetLocation tells this FileDialog which location to display.

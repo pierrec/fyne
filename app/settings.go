@@ -7,12 +7,10 @@ import (
 	"sync"
 
 	"fyne.io/fyne/v2"
-	internalapp "fyne.io/fyne/v2/internal/app"
+	"fyne.io/fyne/v2/internal/app"
 	"fyne.io/fyne/v2/internal/build"
 	"fyne.io/fyne/v2/theme"
 )
-
-var noAnimations bool // set to true at compile time if no_animations tag is passed
 
 // SettingsSchema is used for loading and storing global settings
 type SettingsSchema struct {
@@ -27,7 +25,7 @@ type SettingsSchema struct {
 
 // StoragePath returns the location of the settings storage
 func (sc *SettingsSchema) StoragePath() string {
-	return filepath.Join(rootConfigDir(), "settings.json")
+	return filepath.Join(app.RootConfigDir(), "settings.json")
 }
 
 // Declare conformity with Settings interface
@@ -82,7 +80,7 @@ func (s *settings) SetTheme(theme fyne.Theme) {
 }
 
 func (s *settings) ShowAnimations() bool {
-	return !s.schema.DisableAnimations && !noAnimations
+	return !s.schema.DisableAnimations && !build.NoAnimations
 }
 
 func (s *settings) ThemeVariant() fyne.ThemeVariant {
@@ -94,6 +92,13 @@ func (s *settings) applyTheme(theme fyne.Theme, variant fyne.ThemeVariant) {
 	defer s.propertyLock.Unlock()
 	s.variant = variant
 	s.theme = theme
+	s.apply()
+}
+
+func (s *settings) applyVariant(variant fyne.ThemeVariant) {
+	s.propertyLock.Lock()
+	defer s.propertyLock.Unlock()
+	s.variant = variant
 	s.apply()
 }
 
@@ -129,7 +134,7 @@ func (s *settings) fileChanged() {
 }
 
 func (s *settings) loadSystemTheme() fyne.Theme {
-	path := filepath.Join(rootConfigDir(), "theme.json")
+	path := filepath.Join(app.RootConfigDir(), "theme.json")
 	data, err := fyne.LoadResourceFromPath(path)
 	if err != nil {
 		if !os.IsNotExist(err) {
@@ -153,7 +158,7 @@ func (s *settings) setupTheme() {
 		name = env
 	}
 
-	variant := internalapp.DefaultVariant()
+	variant := app.DefaultVariant()
 	effectiveTheme := s.theme
 	if !s.themeSpecified {
 		effectiveTheme = s.loadSystemTheme()

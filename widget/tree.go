@@ -7,6 +7,7 @@ import (
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/data/binding"
 	"fyne.io/fyne/v2/driver/desktop"
+	"fyne.io/fyne/v2/internal/async"
 	"fyne.io/fyne/v2/internal/cache"
 	"fyne.io/fyne/v2/internal/widget"
 	"fyne.io/fyne/v2/theme"
@@ -591,8 +592,6 @@ func (c *treeContent) CreateRenderer() fyne.WidgetRenderer {
 		treeContent:  c,
 		branches:     make(map[string]*branch),
 		leaves:       make(map[string]*leaf),
-		branchPool:   &syncPool{},
-		leafPool:     &syncPool{},
 	}
 }
 
@@ -615,8 +614,8 @@ type treeContentRenderer struct {
 	objects     []fyne.CanvasObject
 	branches    map[string]*branch
 	leaves      map[string]*leaf
-	branchPool  pool
-	leafPool    pool
+	branchPool  async.Pool[fyne.CanvasObject]
+	leafPool    async.Pool[fyne.CanvasObject]
 }
 
 func (r *treeContentRenderer) Layout(size fyne.Size) {
@@ -728,12 +727,12 @@ func (r *treeContentRenderer) Layout(size fyne.Size) {
 	// Release any nodes that haven't been reused
 	for uid, b := range r.branches {
 		if _, ok := branches[uid]; !ok {
-			r.branchPool.Release(b)
+			r.branchPool.Put(b)
 		}
 	}
 	for uid, l := range r.leaves {
 		if _, ok := leaves[uid]; !ok {
-			r.leafPool.Release(l)
+			r.leafPool.Put(l)
 		}
 	}
 
@@ -809,7 +808,7 @@ func (r *treeContentRenderer) refreshForID(toDraw TreeNodeID) {
 }
 
 func (r *treeContentRenderer) getBranch() (b *branch) {
-	o := r.branchPool.Obtain()
+	o := r.branchPool.Get()
 	if o != nil {
 		b = o.(*branch)
 	} else {
@@ -823,7 +822,7 @@ func (r *treeContentRenderer) getBranch() (b *branch) {
 }
 
 func (r *treeContentRenderer) getLeaf() (l *leaf) {
-	o := r.leafPool.Obtain()
+	o := r.leafPool.Get()
 	if o != nil {
 		l = o.(*leaf)
 	} else {
