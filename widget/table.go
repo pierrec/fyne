@@ -483,7 +483,6 @@ func (t *Table) ScrollTo(id TableCellID) {
 		cellX -= t.stuckXOff + t.stuckWidth
 	}
 	if t.ShowHeaderColumn {
-		cellX += t.headerSize.Width
 		stickCols--
 	}
 	if stickCols == 0 || id.Col > stickCols {
@@ -500,7 +499,6 @@ func (t *Table) ScrollTo(id TableCellID) {
 		cellY -= t.stuckYOff + t.stuckHeight
 	}
 	if t.ShowHeaderRow {
-		cellY += t.headerSize.Height
 		stickRows--
 	}
 	if stickRows == 0 || id.Row >= stickRows {
